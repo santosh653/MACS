@@ -34,6 +34,24 @@ cpdef np.ndarray[np.int32_t, ndim=1] maxima(np.ndarray[np.float32_t, ndim=1] sig
     m = np.where( diff <= -1)[0].astype('int32')
     return m
 
+cpdef np.ndarray[np.int32_t, ndim=1] minima(np.ndarray[np.float32_t, ndim=1] signal,
+                                            int window_size=51):
+    """return the local maxima in a signal after applying a 2nd order
+    Savitsky-Golay (polynomial) filter using window_size specified  
+    """
+    cdef:
+        np.ndarray[np.int32_t, ndim=1] m
+        np.ndarray[np.float64_t, ndim=1] smoothed
+        np.ndarray[np.float32_t, ndim=1] sign, diff
+
+    window_size = window_size//2*2+1 # to make an odd number
+    smoothed = savitzky_golay_order2_deriv1(signal, window_size).round(16)
+    sign = np.sign( smoothed.astype("float32") )
+    diff = np.diff( sign )
+    m = np.where( diff >= 1)[0].astype('int32')
+    m = m[1:-1]
+    return m
+
 cdef np.ndarray[np.int32_t, ndim=1] internal_minima( np.ndarray[np.float32_t, ndim=1] signal,
                                                      np.ndarray[np.int32_t, ndim=1] maxima ):
     cdef:
@@ -257,14 +275,12 @@ cpdef np.ndarray[np.float64_t, ndim=1] savitzky_golay_order2_deriv1(np.ndarray[n
     firstvals = signal[0] - np.abs(signal[1:half_window+1][::-1] - signal[0])
     lastvals = signal[-1] + np.abs(signal[-half_window-1:-1][::-1] - signal[-1])
     signal = np.concatenate((firstvals, signal, lastvals))
-    #print (repr(m))
     ret = np.convolve( m[::-1], signal.astype("float64"), mode='valid') #.astype("float32").round(8) # round to 8 decimals to avoid signing issue
-    #print (ret[160:165])
     return ret
 
 
 # Another modified version from http://www.scipy.org/Cookbook/SavitzkyGolay
-cpdef np.ndarray[np.float32_t, ndim=1] savitzky_golay( np.ndarray[np.float32_t, ndim=1] y, int window_size,
+cpdef np.ndarray[np.float64_t, ndim=1] savitzky_golay( np.ndarray[np.float32_t, ndim=1] y, int window_size,
                                                        int order, int deriv = 0, int rate = 1 ):
     """Smooth (and optionally differentiate) data with a Savitzky-Golay filter.
     The Savitzky-Golay filter removes high frequency noise from data.
@@ -318,8 +334,8 @@ cpdef np.ndarray[np.float32_t, ndim=1] savitzky_golay( np.ndarray[np.float32_t, 
         np.ndarray[np.int64_t, ndim=2] b
         # pad the signal at the extremes with
         # values taken from the signal itself
-        np.ndarray[np.float32_t, ndim=1] firstvals, lastvals, ret
-        np.ndarray[np.float64_t, ndim=1] m
+        np.ndarray[np.float32_t, ndim=1] firstvals, lastvals
+        np.ndarray[np.float64_t, ndim=1] m, ret
 
     try:
         window_size = np.abs( np.int( window_size ) )
@@ -339,5 +355,5 @@ cpdef np.ndarray[np.float32_t, ndim=1] savitzky_golay( np.ndarray[np.float32_t, 
     firstvals = y[ 0 ] - np.abs( y[ 1:half_window + 1 ][ ::-1 ] - y[ 0 ] )
     lastvals = y[ -1 ] + np.abs( y[ -half_window - 1:-1 ][ ::-1 ] - y[ -1 ])
     y = np.concatenate( ( firstvals, y, lastvals ) )
-    ret = np.convolve( m[ ::-1 ], y, mode = 'valid' ).astype("float32")
+    ret = np.convolve( m[ ::-1 ], y.astype("float64"), mode = 'valid' )
     return ret
