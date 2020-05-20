@@ -240,6 +240,65 @@ def opt_validate ( options ):
 
     return options
 
+def opt_validate_qcall ( options ):
+    """Validate options from a OptParser object.
+
+    Ret: Validated options object.
+    """
+    # format
+
+    options.gzip_flag = False           # if the input is gzip file
+    
+    options.format = options.format.upper()
+    if options.format == "ELAND":
+        options.parser = ELANDResultParser
+    elif options.format == "BED":
+        options.parser = BEDParser
+    elif options.format == "ELANDMULTI":
+        options.parser = ELANDMultiParser
+    elif options.format == "ELANDEXPORT":
+        options.parser = ELANDExportParser
+    elif options.format == "SAM":
+        options.parser = SAMParser
+    elif options.format == "BAM":
+        options.parser = BAMParser
+        options.gzip_flag = True
+    elif options.format == "BOWTIE":
+        options.parser = BowtieParser
+    elif options.format == "BAMPE":
+        options.parser = BAMPEParser
+        options.gzip_flag = True
+    elif options.format == "BEDPE":
+        options.parser = BEDPEParser
+    elif options.format == "AUTO":
+        options.parser = guess_parser        
+    else:
+        logging.error("Format \"%s\" cannot be recognized!" % (options.format))
+        sys.exit(1)
+    
+    # uppercase the format string 
+    options.format = options.format.upper()
+
+    # logging object
+    logging.basicConfig(level=(4-options.verbose)*10,
+                        format='%(levelname)-5s @ %(asctime)s: %(message)s ',
+                        datefmt='%a, %d %b %Y %H:%M:%S',
+                        stream=sys.stderr,
+                        filemode="w"
+                        )
+    
+    options.error   = logging.critical        # function alias
+    options.warn    = logging.warning
+    options.debug   = logging.debug
+    options.info    = logging.info
+
+    # extsize
+    if options.extsize <= 0 :
+        logging.error("--extsize must > 0!")
+        sys.exit(1)
+
+    return options
+
 def diff_opt_validate ( options ):
     """Validate options from a OptParser object.
 

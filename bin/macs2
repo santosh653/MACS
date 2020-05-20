@@ -51,6 +51,13 @@ def main():
             run( args )
         except MemoryError:
             sys.exit( "MemoryError occurred. If your input file has a large number of contigs/chromosomes, decrease the buffer_size value by setting --buffer-size option." )
+    elif subcommand == "qcall":
+        # General call peak
+        from MACS2.qcall_cmd import run
+        try:
+            run( args )
+        except MemoryError:
+            sys.exit( "MemoryError occurred. If your input file has a large number of contigs/chromosomes, decrease the buffer_size value by setting --buffer-size option." )
     #elif subcommand == "diffpeak":
     #    # differential peak calling w/ bedgraphs + optional peak regions
     #    from MACS2.diffpeak_cmd import run
@@ -132,6 +139,9 @@ def prepare_argparser ():
 
     # command for 'callpeak'
     add_callpeak_parser( subparsers )
+
+    # command for 'qcall'
+    add_qcall_parser( subparsers )    
 
     # # command for 'diffpeak'
     # add_diffpeak_parser( subparsers )
@@ -300,6 +310,35 @@ def add_callpeak_parser( subparsers ):
                                      help = "Obsolete option. Originally designed to normalize treatment and control with customized ratio, now it won't have any effect." )
     return
 
+def add_qcall_parser ( subparsers ):
+    """
+    """
+    argparser_qcall = subparsers.add_parser( "qcall",
+                                             help = "Quick peak calling" )
+    argparser_qcall.add_argument( "-i", "--ifile", dest = "ifile", type = str, required = True, nargs = "+",
+                                      help = "Alignment file. If multiple files are given as '-t A B C', then they will all be read and combined. Note that pair-end data is not supposed to work with this command. REQUIRED." )
+    argparser_qcall.add_argument( "-f", "--format", dest = "format", type = str,
+                                      choices=("AUTO","BAM","SAM","BED","ELAND","ELANDMULTI","ELANDEXPORT","BOWTIE","BAMPE","BEDPE"),
+                                      help = "Format of tag file, \"AUTO\", \"BED\" or \"ELAND\" or \"ELANDMULTI\" or \"ELANDEXPORT\" or \"SAM\" or \"BAM\" or \"BOWTIE\" or \"BAMPE\" or \"BEDPE\". The default AUTO option will let '%(prog)s' decide which format the file is. Please check the definition in README file if you choose ELAND/ELANDMULTI/ELANDEXPORT/SAM/BAM/BOWTIE or BAMPE/BEDPE. DEFAULT: \"AUTO\"",
+                                      default = "AUTO" )
+    argparser_qcall.add_argument( "--extsize", dest = "extsize", type = int, default = 200,
+                                   help = "The extension size in bps. Each alignment read will become a EXTSIZE of fragment, then be piled up. Check description for -B for detail. It's twice the `shiftsize` in old MACSv1 language. This option will be ignored when the format is set as BAMPE or BEDPE. DEFAULT: 200 " )
+
+    argparser_qcall.add_argument( "-c", "--cutoff" , dest = "cutoff", type = float,
+                                        help = "Cutoff of pileup value to call peaks. DEFAULT: 5", default = 5 )
+    argparser_qcall.add_argument( "-l", "--min-length", dest = "minlen", type = int,
+                                       help = "minimum length of peak, better to set it as d value. DEFAULT: 200", default = 200 )
+    argparser_qcall.add_argument( "-g", "--max-gap", dest = "maxgap", type = int,
+                                       help = "maximum gap between significant points in a peak, better to set it as tag size. DEFAULT: 30", default = 30 )
+    argparser_qcall.add_argument( "--buffer-size", dest = "buffer_size", type = int, default = "100000",
+                                      help = "Buffer size for incrementally increasing internal array size to store reads alignment information. In most cases, you don't have to change this parameter. However, if there are large number of chromosomes/contigs/scaffolds in your alignment, it's recommended to specify a smaller buffer size in order to decrease memory usage (but it will take longer time to read alignment files). Minimum memory requested for reading an alignment file is about # of CHROMOSOME * BUFFER_SIZE * 8 Bytes. DEFAULT: 100000 " )
+    
+    argparser_qcall.add_argument( "--verbose", dest = "verbose", type = int, default = 2,
+                                      help = "Set verbose level. 0: only show critical message, 1: show additional warning message, 2: show process information, 3: show debug messages. If you want to know where are the duplicate reads, use 3. DEFAULT:2" )
+    add_outdir_option( argparser_qcall )
+    add_output_group( argparser_qcall )
+    
+    
 def add_diffpeak_parser( subparsers ):
     """Add main function 'peak calling' argument parsers.
     """

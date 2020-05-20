@@ -357,7 +357,7 @@ cdef class bedGraphTrackI:
             self.__data[chrom]=[new_pos,new_value]
         return True
 
-    def summary (self):
+    cpdef summary (self):
         """Calculate the sum, max, min, mean, and std. Return a tuple for (sum, max, min, mean, std).
         
         """
@@ -365,12 +365,13 @@ cdef class bedGraphTrackI:
             long n_v
             double sum_v, max_v, min_v, mean_v, variance, tmp, std_v
             int pre_p, l, i
+            
 
         pre_p = 0
         n_v = 0
         sum_v = 0
-        max_v = -100000
-        min_v = 100000
+        #max_v = -100000
+        #min_v = 100000
         for (p,v) in self.__data.values():
             # for each chromosome
             pre_p = 0
@@ -380,8 +381,8 @@ cdef class bedGraphTrackI:
                 sum_v += v[i]*l
                 n_v += l
                 pre_p = p[i]
-            max_v = max(max(v),max_v)
-            min_v = min(min(v),min_v)
+            #max_v = max(max(v),max_v)
+            #min_v = min(min(v),min_v)
         mean_v = sum_v/n_v
         variance = 0.0
         for (p,v) in self.__data.values():
@@ -394,9 +395,10 @@ cdef class bedGraphTrackI:
 
         variance /= float(n_v-1)
         std_v = sqrt(variance)
-        return (sum_v, n_v, max_v, min_v, mean_v, std_v)
+        #return (sum_v, n_v, max_v, min_v, mean_v, std_v)
+        return (sum_v, n_v, mean_v, std_v)    
 
-    def call_peaks (self, double cutoff=1, double up_limit=1e310, int min_length=200, int max_gap=50,
+    cpdef call_peaks (self, double cutoff=1, double up_limit=1e310, int min_length=200, int max_gap=50,
                     bool call_summits=False):
         """This function try to find regions within which, scores
         are continuously higher than a given cutoff.
@@ -421,7 +423,6 @@ cdef class bedGraphTrackI:
         
         #if call_summits: close_peak = self.__close_peak2
         #else: close_peak = self.__close_peak
-        close_peak = self.__close_peak
         chrs = self.get_chr_names()
         peaks = PeakIO()                      # dictionary to save peaks
         for chrom in chrs:
@@ -460,7 +461,7 @@ cdef class bedGraphTrackI:
                     peak_content.append((pre_p,p,v))
                 else:
                     # when the gap is not allowed, close this peak
-                    close_peak(peak_content, peaks, min_length, chrom) #, smoothlen=max_gap / 2 )
+                    self.__close_peak(peak_content, peaks, min_length, chrom) #, smoothlen=max_gap / 2 )
                     # start a new peak
                     peak_content = [(pre_p,p,v),]
                 pre_p = p
@@ -468,10 +469,10 @@ cdef class bedGraphTrackI:
             # save the last peak
             if not peak_content:
                 continue
-            close_peak(peak_content, peaks, min_length, chrom) #, smoothlen=max_gap / 2 )
+            self.__close_peak(peak_content, peaks, min_length, chrom) #, smoothlen=max_gap / 2 )
         return peaks
 
-    def __close_peak( self, peak_content, peaks, int min_length, bytes chrom ):
+    cdef __close_peak( self, peak_content, peaks, int min_length, bytes chrom ):
         
         peak_length = peak_content[-1][1]-peak_content[0][0]
         if peak_length >= min_length: # if the peak is too small, reject it
@@ -497,7 +498,7 @@ cdef class bedGraphTrackI:
                        )
             return True
                     
-    def call_broadpeaks (self, double lvl1_cutoff=500, double lvl2_cutoff=100, int min_length=200,
+    cpdef call_broadpeaks (self, double lvl1_cutoff=500, double lvl2_cutoff=100, int min_length=200,
                          int lvl1_max_gap=50, int lvl2_max_gap=400):
         """This function try to find enriched regions within which,
         scores are continuously higher than a given cutoff for level
@@ -559,7 +560,7 @@ cdef class bedGraphTrackI:
 
         return broadpeaks
 
-    def __add_broadpeak (self, bpeaks, chrom, lvl2peak, lvl1peakset):
+    cdef __add_broadpeak (self, bpeaks, chrom, lvl2peak, lvl1peakset):
         """Internal function to create broad peak.
         
         """

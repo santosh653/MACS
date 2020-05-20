@@ -13,7 +13,6 @@ import pytest
 
 from math import log10
 import numpy as np
-import scipy
 from MACS2.Signal import maxima, minima, savitzky_golay, savitzky_golay_order2_deriv1
 
 # ------------------------------------
