@@ -14,13 +14,17 @@ the distribution).
 # ------------------------------------
 import logging
 
-from array import array
-
 import numpy as np
+cimport numpy as np
+from numpy cimport uint8_t, uint16_t, uint32_t, uint64_t, int8_t, int16_t, int32_t, int64_t, float32_t, float64_t
+
 
 from libc.math cimport sqrt
 from libc.math cimport log
 from cpython cimport bool
+from cpython cimport array
+import array
+
 
 from MACS2.Constants import *
 from MACS2.IO.ScoreTrack import scoreTrackII,CombinedTwoTrack
@@ -357,46 +361,67 @@ cdef class bedGraphTrackI:
             self.__data[chrom]=[new_pos,new_value]
         return True
 
-    cpdef summary (self):
-        """Calculate the sum, max, min, mean, and std. Return a tuple for (sum, max, min, mean, std).
+    # cpdef summary (self):
+    #     """Calculate the sum, max, min, mean, and std. Return a tuple for (sum, max, min, mean, std).
         
-        """
-        cdef:
-            long n_v
-            double sum_v, max_v, min_v, mean_v, variance, tmp, std_v
-            int pre_p, l, i
+    #     """
+    #     #return None
+    #     return self.__summary()
+    
+    # cdef tuple __summary (self):
+    #     """Calculate the sum, max, min, mean, and std. Return a tuple for (sum, max, min, mean, std).
+        
+    #     """
+    #     cdef:
+    #         float64_t n_v, sum_v
+    #         float32_t max_v, min_v, mean_v, variance, tmp, std_v
+    #         int32_t pre_p, l, i
+    #         np.ndarray p
+    #         np.ndarray v
+    #         int32_t *tp
+    #         float32_t *tv
+    #         int32_t N
             
+    #     pre_p = 0
+    #     n_v = 0
+    #     sum_v = 0
+    #     #max_v = -100000
+    #     #min_v = 100000
+    #     for (p,v) in self.__data.values():
+    #         N = len(p)
+    #         print (N)
+    #         # for each chromosome
+    #         tp = <int32_t *>p
+    #         tv = <float32_t *>v
+    #         pre_p = 0
+    #         for i in range( N ):
+    #             # for each region
+    #             l = tp[0] - pre_p
+    #             sum_v += tv[0] * l
+    #             n_v += l
+    #             pre_p = tp[0]
+    #             tp += 1
+    #             tv += 1
+    #         #max_v = max(max(v),max_v)
+    #         #min_v = min(min(v),min_v)
+    #     mean_v = sum_v/n_v
+    #     print (mean_v)
+    #     variance = 0.0
+    #     for (p,v) in self.__data.values():
+    #         N = len(p)
+    #         print (N)            
+    #         for i in range( N ):
+    #             # for each region
+    #             tmp = v[i] - mean_v
+    #             l = p[i] - pre_p
+    #             variance += tmp*tmp*l
+    #             pre_p = p[i]
+    #             #tp += 1
+    #             #tv += 1
 
-        pre_p = 0
-        n_v = 0
-        sum_v = 0
-        #max_v = -100000
-        #min_v = 100000
-        for (p,v) in self.__data.values():
-            # for each chromosome
-            pre_p = 0
-            for i in range(len(p)):
-                # for each region
-                l = p[i]-pre_p
-                sum_v += v[i]*l
-                n_v += l
-                pre_p = p[i]
-            #max_v = max(max(v),max_v)
-            #min_v = min(min(v),min_v)
-        mean_v = sum_v/n_v
-        variance = 0.0
-        for (p,v) in self.__data.values():
-            for i in range(len(p)):
-                # for each region
-                tmp = v[i]-mean_v
-                l = p[i]-pre_p
-                variance += tmp*tmp*l
-                pre_p = p[i]
-
-        variance /= float(n_v-1)
-        std_v = sqrt(variance)
-        #return (sum_v, n_v, max_v, min_v, mean_v, std_v)
-        return (sum_v, n_v, mean_v, std_v)    
+    #     variance /= float(n_v-1)
+    #     std_v = sqrt(variance)
+    #     return (sum_v, n_v, mean_v, std_v)    
 
     cpdef call_peaks (self, double cutoff=1, double up_limit=1e310, int min_length=200, int max_gap=50,
                     bool call_summits=False):

@@ -160,24 +160,35 @@ macs2 bdgopt -m min -p 10 -i ${TAG}_run_callpeak_narrow/run_callpeak_narrow0_tre
 
 macs2 bdgopt -m max -p 2 -i ${TAG}_run_callpeak_narrow/run_callpeak_narrow0_treat_pileup.bdg -o run_bdgopt_max.bdg --outdir ${TAG}_run_bdgopt &> ${TAG}_run_bdgopt/run_bdgopt_max.log
 
+# qcall
+echo "13. qcall"
+
+mkdir ${TAG}_run_qcall
+
+macs2 qcall -i ${CHIP} --cutoff 5 -o ${TAG}_run_qcall/run_qcall_chip.bed &>  ${TAG}_run_qcall/run_qcall_chip.log
+
+macs2 qcall -i ${CHIPPE} --cutoff 5 -f BAMPE -o ${TAG}_run_qcall/run_qcall_chippe.bed &>  ${TAG}_run_qcall/run_qcall_chippe.log
+
+macs2 qcall -i ${CHIPBEDPE} --cutoff 5 -f BEDPE -o ${TAG}_run_qcall/run_qcall_chipbedpe.bed &>  ${TAG}_run_qcall/run_qcall_chipbedpe.log
+
 # test large amount of contigs
-echo "13. 50k contigs with buffersize"
+echo "14. 50k contigs with buffersize"
 
 mkdir ${TAG}_run_50kcontigs
 
-echo "13.1 callpeak"
+echo "14.1 callpeak"
 macs2 callpeak -g 10000000 -t $CHIPCONTIGS50K -n run_callpeak_50kcontigs --outdir ${TAG}_run_50kcontigs --buffer-size 1000 --nomodel --extsize 200 &> ${TAG}_run_50kcontigs/run_callpeak_50kcontigs.log
 
-echo "13.2 filterdup"
+echo "14.2 filterdup"
 macs2 filterdup -g 10000000 -i $CHIPCONTIGS50K --outdir ${TAG}_run_50kcontigs -o run_filterdup_result.bed --buffer-size 1000 &> ${TAG}_run_50kcontigs/run_filterdup_50kcontigs.log
 
-echo "13.3 pileup"
+echo "14.3 pileup"
 macs2 pileup -f BED -i $CHIPCONTIGS50K --extsize 200 --outdir ${TAG}_run_50kcontigs -o run_pileup_ChIP.bed.bdg --buffer-size 1000 &> ${TAG}_run_50kcontigs/run_pileup_ChIP.bed.log
 
-echo "13.4 randsample"
+echo "14.4 randsample"
 macs2 randsample -i $CHIPCONTIGS50K -n 100000 --seed 31415926 --outdir ${TAG}_run_50kcontigs -o run_randsample.bed --buffer-size 1000 &> ${TAG}_run_50kcontigs/run_randsample.log
 
-echo "14. search for errors or warnings in log files"
+echo "15. search for errors or warnings in log files"
 flag=0
 for i in `ls ${TAG}_run_*/*.log`;do
     echo " checking $i..."
@@ -195,11 +206,11 @@ if [[ $flag == 1 ]]; then
     exit 1;
 fi
 
-echo "15. update standard outputs"
+echo "16. update standard outputs"
 
 flag=0
 # we do not check the consistency of random subsampling results
-subfolders=(50kcontigs bdgbroadcall bdgcmp bdgdiff bdgpeakcall callpeak_broad callpeak_narrow callpeak_narrow_revert callpeak_pe_broad callpeak_pe_narrow cmbreps filterdup pileup refinepeak bdgopt)
+subfolders=(50kcontigs bdgbroadcall bdgcmp bdgdiff bdgpeakcall callpeak_broad callpeak_narrow callpeak_narrow_revert callpeak_pe_broad callpeak_pe_narrow cmbreps filterdup pileup refinepeak bdgopt qcall)
 
 m=0
 n=0

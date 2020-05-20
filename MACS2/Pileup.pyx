@@ -170,7 +170,7 @@ cpdef pileup_and_write_pe( petrackI,
         c_write_pv_array_to_bedGraph( _data, l_data, chrom_char, output_filename, 1 )
 
     
-# Unified pileup function #
+# Unified pileup function # This function is used in qcall
 cpdef unified_pileup_bdg(track,
                          ds,
                          scale_factors,
@@ -367,6 +367,8 @@ cdef pileup_w_multiple_d_bdg(object trackI, list d_s, list scale_factor_s = [],
 
 # baseline_value needs to be float not int, otherwise we cause error in 
 # poisson CDF
+
+# this function was fixed and tested
 cdef pileup_bdg_pe(object trackI, float scale_factor, float baseline_value):
     """Pileup fragments into bedGraphTrackI object.
 
@@ -379,18 +381,17 @@ cdef pileup_bdg_pe(object trackI, float scale_factor, float baseline_value):
     cdef:
         int rlength
         bytes chrom
-        np.ndarray[np.int32_t, ndim=2] locs
+        np.ndarray locs
         dict chrlengths = trackI.get_rlengths ()
         
     ret = bedGraphTrackI(baseline_value=baseline_value) # bedGraphTrackI object to be returned.
     for chrom in sorted(list(chrlengths.keys())):
         rlength = chrlengths[chrom]
         locs = trackI.get_locations_by_chr(chrom) # we have to sort before doing quick_pileup!
-        ret.add_a_chromosome(chrom, quick_pileup(np.sort(locs[:,0]), np.sort(locs[:,1]),
-                                                    scale_factor, 
-                                                    baseline_value))
+        ret.add_a_chromosome(chrom, quick_pileup(np.sort(locs['l']), np.sort(locs['r']), scale_factor, baseline_value))
     return ret
 
+# need to test this function...
 cdef pileup_bdg_pe_w_ext (object trackI, int d, float scale_factor = 1.0,
                            float baseline_value = 0.0):
     """Pileup fragments into bedGraphTrackI object with extension. Fragment will
@@ -409,7 +410,7 @@ cdef pileup_bdg_pe_w_ext (object trackI, int d, float scale_factor = 1.0,
         int five_shift, three_shift
         int rlength
         bytes chrom
-        np.ndarray[np.int32_t, ndim=2] locs
+        np.ndarray locs
         np.ndarray[np.int32_t, ndim=1] start_poss, end_poss
         dict chrlengths = trackI.get_rlengths ()
         
@@ -421,7 +422,7 @@ cdef pileup_bdg_pe_w_ext (object trackI, int d, float scale_factor = 1.0,
     for chrom in sorted(list(chrlengths.keys())):
         rlength = chrlengths[chrom]
         locs = trackI.get_locations_by_chr(chrom)
-        midpoints = locs[:,0] + (locs[:,1] - locs[:,0]) // 2
+        midpoints = locs['l'] + (locs['r'] - locs['l']) // 2
 
         # fix negative coordinations
         start_poss = midpoints - five_shift
@@ -443,6 +444,7 @@ cdef pileup_bdg_pe_w_ext (object trackI, int d, float scale_factor = 1.0,
 
     return ret
 
+# need to fix and test this function...
 cdef pileup_w_multiple_d_bdg_pe ( object trackI, list d_s = [],  
                                    list scale_factor_s = [],
                                    float baseline_value = 0):

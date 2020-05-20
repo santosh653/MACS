@@ -314,21 +314,24 @@ def add_qcall_parser ( subparsers ):
     """
     """
     argparser_qcall = subparsers.add_parser( "qcall",
-                                             help = "Quick peak calling" )
+                                             help = "Quick peak calling by applying a fold-change over genome background cutoff. Different with `callpeak` command, this quick peak calling will not filter duplicate reads, will not build any shifting model, and will not calculate p-value or q-value. Instead, it will read the alignment information from `ifile`, pile up with `extsize` or pile up the whole fragments specified in BAMPE or BEDPE, then call enriched regions above given fold-change cutoff over genome-background." )
     argparser_qcall.add_argument( "-i", "--ifile", dest = "ifile", type = str, required = True, nargs = "+",
                                       help = "Alignment file. If multiple files are given as '-t A B C', then they will all be read and combined. Note that pair-end data is not supposed to work with this command. REQUIRED." )
     argparser_qcall.add_argument( "-f", "--format", dest = "format", type = str,
                                       choices=("AUTO","BAM","SAM","BED","ELAND","ELANDMULTI","ELANDEXPORT","BOWTIE","BAMPE","BEDPE"),
                                       help = "Format of tag file, \"AUTO\", \"BED\" or \"ELAND\" or \"ELANDMULTI\" or \"ELANDEXPORT\" or \"SAM\" or \"BAM\" or \"BOWTIE\" or \"BAMPE\" or \"BEDPE\". The default AUTO option will let '%(prog)s' decide which format the file is. Please check the definition in README file if you choose ELAND/ELANDMULTI/ELANDEXPORT/SAM/BAM/BOWTIE or BAMPE/BEDPE. DEFAULT: \"AUTO\"",
                                       default = "AUTO" )
+    argparser_qcall.add_argument( "--gsize", dest = "gsize", type = str, default = "hs",
+                                  help = "Effective genome size to calculate genome background of pileup. It can be 1.0e+9 or 1000000000, or shortcuts:'hs' for human (2.7e9), 'mm' for mouse (1.87e9), 'ce' for C. elegans (9e7) and 'dm' for fruitfly (1.2e8), Default:hs" )
+    
     argparser_qcall.add_argument( "--extsize", dest = "extsize", type = int, default = 200,
-                                   help = "The extension size in bps. Each alignment read will become a EXTSIZE of fragment, then be piled up. Check description for -B for detail. It's twice the `shiftsize` in old MACSv1 language. This option will be ignored when the format is set as BAMPE or BEDPE. DEFAULT: 200 " )
+                                   help = "The extension size in bps. Each alignment read will become a EXTSIZE of fragment, then be piled up. This option will be ignored when the format is set as BAMPE or BEDPE. DEFAULT: 200 " )
 
-    argparser_qcall.add_argument( "-c", "--cutoff" , dest = "cutoff", type = float,
-                                        help = "Cutoff of pileup value to call peaks. DEFAULT: 5", default = 5 )
-    argparser_qcall.add_argument( "-l", "--min-length", dest = "minlen", type = int,
-                                       help = "minimum length of peak, better to set it as d value. DEFAULT: 200", default = 200 )
-    argparser_qcall.add_argument( "-g", "--max-gap", dest = "maxgap", type = int,
+    argparser_qcall.add_argument( "--cutoff" , dest = "cutoff", type = float,
+                                        help = "Fold-change cutoff of pileup/genome_background to call peaks. DEFAULT: 10", default = 10 )
+    argparser_qcall.add_argument( "--min-length", dest = "minlen", type = int,
+                                       help = "minimum length of peak, better to set it as fragment length. DEFAULT: 200", default = 200 )
+    argparser_qcall.add_argument( "--max-gap", dest = "maxgap", type = int,
                                        help = "maximum gap between significant points in a peak, better to set it as tag size. DEFAULT: 30", default = 30 )
     argparser_qcall.add_argument( "--buffer-size", dest = "buffer_size", type = int, default = "100000",
                                       help = "Buffer size for incrementally increasing internal array size to store reads alignment information. In most cases, you don't have to change this parameter. However, if there are large number of chromosomes/contigs/scaffolds in your alignment, it's recommended to specify a smaller buffer size in order to decrease memory usage (but it will take longer time to read alignment files). Minimum memory requested for reading an alignment file is about # of CHROMOSOME * BUFFER_SIZE * 8 Bytes. DEFAULT: 100000 " )

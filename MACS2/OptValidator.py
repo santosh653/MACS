@@ -245,8 +245,18 @@ def opt_validate_qcall ( options ):
 
     Ret: Validated options object.
     """
-    # format
+    # gsize
+    try:
+        options.gsize = efgsize[options.gsize]
+    except:
+        try:
+            options.gsize = float(options.gsize)
+        except:
+            logging.error("Error when interpreting --gsize option: %s" % options.gsize)
+            logging.error("Available shortcuts of effective genome sizes are %s" % ",".join(list(efgsize.keys())))
+            sys.exit(1)
 
+    # format
     options.gzip_flag = False           # if the input is gzip file
     
     options.format = options.format.upper()
