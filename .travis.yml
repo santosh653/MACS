@@ -16,10 +16,6 @@ dist:
   - xenial
 language: python
 
-before_install:
-  - sudo yum update -y
-  - sudo yum groupinstall 'Development Tools' -y
-
 arch:
   - amd64
   - ppc64le
